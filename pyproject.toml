@@ -1,3 +1,35 @@
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry]
+name = "prompt-storm"
+version = "0.1.0"
+description = "A project for prompt engineering and generation"
+authors = ["Your Name <your.email@example.com>"]
+readme = "README.md"
+packages = [{include = "prompt_storm"}]
+
+[tool.poetry.dependencies]
+python = ">=3.11,<4.0"
+typer = ">=0.9.0"
+rich = ">=10.0.0"
+click = ">=8.0.0"
+litellm = ">=1.0.0"
+pydantic = ">=2.0.0"
+python-dotenv = ">=1.0.0"
+
+[tool.poetry.group.dev.dependencies]
+ruff = "*"
+black = "*"
+pytest = "*"
+pytest-mock = "*"
+pytest-cov = "*"
+pytest-asyncio = "*"
+
+[tool.poetry.scripts]
+prompt-storm = "prompt_storm.cli:cli"
+
 [tool.ruff]
 line-length = 88
 target-version = "py311"
@@ -8,21 +40,4 @@ target-version = ['py311']
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-
-[project]
-name = "prompt-storm"
-version = "0.1.0"
-description = "A project for prompt engineering and generation"
-requires-python = ">=3.11"
-
-dependencies = [
-    "typer>=0.9.0",
-    "rich>=10.0.0"
-]
-
-[project.optional-dependencies]
-dev = [
-    "ruff",
-    "black",
-    "pytest"
-]
+addopts = "-v --cov=prompt_storm --cov-report=term-missing"

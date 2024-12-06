@@ -9,16 +9,30 @@ import litellm
 
 class OptimizationConfig(BaseModel):
     """Configuration for prompt optimization."""
-    # IMPORTANT: Do not change this model - it must remain gpt-4o-mini for this project
     model: str = Field(default="gpt-4o-mini", description="Model to use for optimization")
     temperature: float = Field(default=0.7, description="Temperature for generation")
     max_tokens: int = Field(default=2000, description="Maximum tokens in response")
     template: str = Field(
-        default="As a 10x Prompt Engineer with extensive experience in prompt optimization, "
-        "please enhance the following prompt to be more effective, clear, and purposeful:\n\n"
-        "{prompt}\n\n"
-        "Provide the optimized version only, without any explanations.",
-        description="Template for optimization prompt"
+        default=(
+            "As an expert Prompt Engineer, enhance the following prompt:\n\n"
+            "```\n{prompt}\n```\n\n"
+            "Optimization Guidelines:\n"
+            "1. Improve clarity, conciseness, and effectiveness\n"
+            "2. Use variables (e.g., {{{{variable_name}}}}) for customization, variable in snake_case\n"
+            "3. Apply appropriate formatting for better structure\n"
+            "4. Add context or specific instructions where needed\n"
+            "5. Ensure the prompt elicits precise, relevant responses\n"
+            "6. Address potential biases and ethical concerns\n"
+            "7. Tailor for the intended model and use case\n"
+            "8. Consider edge cases and possible misinterpretations\n"
+            "9. Balance human readability with AI comprehension\n"
+            "10. Incorporate a suitable persona if beneficial\n"
+            "11. Use clear, unambiguous language\n"
+            "12. Include examples or demonstrations if helpful\n"
+            "13. Induce CoT, Chain of Thought if applicable\n\n"
+            "Provide only the optimized prompt. No explanations or comments."
+        ),
+        description="Template for prompt optimization"
     )
 
 class PromptOptimizer:
@@ -50,7 +64,7 @@ class PromptOptimizer:
             **kwargs
         }
         
-        # Get the optimization from LiteLLM
+        # Get completion from LiteLLM
         response = litellm.completion(
             messages=[{"role": "user", "content": optimization_prompt}],
             **completion_kwargs
@@ -81,7 +95,7 @@ class PromptOptimizer:
             **kwargs
         }
         
-        # Get the optimization from LiteLLM asynchronously
+        # Get completion from LiteLLM asynchronously
         response = await litellm.acompletion(
             messages=[{"role": "user", "content": optimization_prompt}],
             **completion_kwargs

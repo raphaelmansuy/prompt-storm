@@ -1,11 +1,19 @@
 # Prompt Storm
 
-Welcome to Prompt Storm, an advanced toolkit for prompt engineering and generation.
+Welcome to Prompt Storm, an advanced toolkit for prompt engineering and generation. This tool helps you optimize and enhance your prompts using state-of-the-art language models.
+
+## Features
+
+- **Prompt Optimization**: Enhance your prompts using advanced language models
+- **Model Selection**: Choose from different LLM models for optimization
+- **File Support**: Read prompts from files and save optimized results
+- **Configurable**: Adjust temperature and token limits for better results
+- **Extensible**: Built with a modular design for easy feature additions
 
 ## Prerequisites
 
 - Python 3.11+
-- `uv` for dependency management
+- Poetry (for dependency management)
 
 ## Installation
 
@@ -15,37 +23,107 @@ Welcome to Prompt Storm, an advanced toolkit for prompt engineering and generati
    cd prompt-storm
    ```
 
-2. Set up the virtual environment and install dependencies:
+2. Install dependencies with Poetry:
    ```bash
-   uv venv .venv
-   source .venv/bin/activate
-   uv install
+   poetry install
    ```
 
-## Running the Program
+## Usage
 
-To run the Prompt Storm CLI, use the following command:
+Prompt Storm provides a powerful CLI for prompt optimization. Here are some common use cases:
 
+### Basic Prompt Optimization
 ```bash
-python -m prompt_storm.main --help
+poetry run prompt-storm optimize "Your prompt here"
 ```
 
-This will display the help message with available options and commands.
-
-## Running Tests
-
-To run the test suite, execute:
-
+### Using Different Models
 ```bash
-PYTHONPATH=. pytest tests
+poetry run prompt-storm optimize --model gpt-3.5-turbo "Your prompt"
 ```
 
-This will run all tests and display the results, ensuring everything is working as expected.
+### Adjusting Generation Parameters
+```bash
+poetry run prompt-storm optimize \
+  --temperature 0.8 \
+  --max-tokens 1000 \
+  "Your prompt"
+```
+
+### File Operations
+```bash
+# Read prompt from file
+poetry run prompt-storm optimize --input-file input.txt
+
+# Save optimized prompt to file
+poetry run prompt-storm optimize \
+  "Your prompt" \
+  --output-file optimized.txt
+```
+
+### Getting Help
+```bash
+poetry run prompt-storm --help
+poetry run prompt-storm optimize --help
+```
+
+## Development
+
+### Setting Up Development Environment
+```bash
+# Install all dependencies including development tools
+poetry install
+```
+
+### Running Tests
+```bash
+# Run tests with coverage report
+poetry run pytest
+
+# Run specific test file
+poetry run pytest tests/test_cli.py
+```
+
+### Code Quality
+```bash
+# Format code
+poetry run black .
+
+# Run linter
+poetry run ruff .
+```
+
+### Building Package
+```bash
+poetry build
+```
+
+## Project Structure
+
+```
+prompt-storm/
+├── prompt_storm/        # Main package directory
+│   ├── __init__.py
+│   ├── cli.py          # CLI implementation
+│   └── optimizer.py    # Prompt optimization logic
+├── tests/              # Test directory
+│   └── test_*.py       # Test files
+├── pyproject.toml      # Project configuration
+└── README.md          # This file
+```
 
 ## Contributing
 
-Feel free to contribute by opening issues or submitting pull requests. We welcome improvements and new features!
+We welcome contributions! Here's how you can help:
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Make your changes
+4. Run tests to ensure everything works
+5. Commit your changes (`git commit -m 'Add amazing feature'`)
+6. Push to the branch (`git push origin feature/amazing-feature`)
+7. Open a Pull Request
 
 ## License
 
-This project is licensed under the MIT License.
+This project is licensed under the MIT License. See the LICENSE file for details.
