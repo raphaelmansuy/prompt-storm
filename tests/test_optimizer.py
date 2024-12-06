@@ -144,3 +144,171 @@ async def test_aoptimize_custom_kwargs():
             temperature=0.8,
             max_tokens=1500
         )
+
+def test_format_to_yaml_basic():
+    """Test basic YAML formatting with default configuration."""
+    with patch('litellm.completion') as mock_completion:
+        expected_yaml = """
+name: test_prompt
+version: '1.0'
+description: A test prompt
+content: >-
+  Tell me about Python
+"""
+        mock_completion.return_value = MockResponse(expected_yaml)
+        optimizer = PromptOptimizer()
+        test_prompt = "Tell me about Python"
+        result = optimizer.format_to_yaml(test_prompt)
+        assert isinstance(result, str)
+        assert 'name:' in result
+        assert 'version:' in result
+        assert 'content:' in result
+        mock_completion.assert_called_once()
+
+def test_format_to_yaml_complex():
+    """Test YAML formatting with a complex prompt containing variables."""
+    with patch('litellm.completion') as mock_completion:
+        expected_yaml = """
+name: variable_prompt
+version: '1.0'
+description: A prompt with variables
+input_variables:
+  language:
+    type: string
+    description: Programming language to describe
+    examples:
+      - 'Python'
+      - 'JavaScript'
+content: >-
+  Tell me about {{language}}
+"""
+        mock_completion.return_value = MockResponse(expected_yaml)
+        optimizer = PromptOptimizer()
+        test_prompt = "Tell me about {{language}}"
+        result = optimizer.format_to_yaml(test_prompt)
+        assert isinstance(result, str)
+        assert 'input_variables:' in result
+        assert 'language:' in result
+        assert 'type: string' in result
+
+def test_format_to_yaml_with_custom_config():
+    """Test YAML formatting with custom configuration."""
+    with patch('litellm.completion') as mock_completion:
+        config = OptimizationConfig(temperature=0.2, max_tokens=500)
+        optimizer = PromptOptimizer(config)
+        mock_completion.return_value = MockResponse('test yaml')
+        result = optimizer.format_to_yaml("test prompt")
+        
+        # Verify the completion was called with correct parameters
+        mock_completion.assert_called_once()
+        call_args = mock_completion.call_args[1]
+        assert call_args['temperature'] == 0.2
+        assert call_args['max_tokens'] == 500
+
+def test_format_to_yaml_with_kwargs():
+    """Test YAML formatting with additional kwargs."""
+    with patch('litellm.completion') as mock_completion:
+        optimizer = PromptOptimizer()
+        mock_completion.return_value = MockResponse('test yaml')
+        result = optimizer.format_to_yaml("test prompt", stream=True, timeout=10)
+        
+        # Verify kwargs were passed through
+        call_args = mock_completion.call_args[1]
+        assert call_args['stream'] is True
+        assert call_args['timeout'] == 10
+
+@pytest.mark.asyncio
+async def test_aformat_to_yaml_basic():
+    """Test basic async YAML formatting with default configuration."""
+    with patch('litellm.acompletion') as mock_completion:
+        expected_yaml = """
+name: test_prompt
+version: '1.0'
+description: A test prompt
+content: >-
+  Tell me about Python
+"""
+        mock_completion.return_value = MockResponse(expected_yaml)
+        optimizer = PromptOptimizer()
+        test_prompt = "Tell me about Python"
+        result = await optimizer.aformat_to_yaml(test_prompt)
+        assert isinstance(result, str)
+        assert 'name:' in result
+        assert 'version:' in result
+        assert 'content:' in result
+        mock_completion.assert_called_once()
+
+@pytest.mark.asyncio
+async def test_aformat_to_yaml_complex():
+    """Test async YAML formatting with a complex prompt containing variables."""
+    with patch('litellm.acompletion') as mock_completion:
+        expected_yaml = """
+name: variable_prompt
+version: '1.0'
+description: A prompt with variables
+input_variables:
+  language:
+    type: string
+    description: Programming language to describe
+    examples:
+      - 'Python'
+      - 'JavaScript'
+content: >-
+  Tell me about {{language}}
+"""
+        mock_completion.return_value = MockResponse(expected_yaml)
+        optimizer = PromptOptimizer()
+        test_prompt = "Tell me about {{language}}"
+        result = await optimizer.aformat_to_yaml(test_prompt)
+        assert isinstance(result, str)
+        assert 'input_variables:' in result
+        assert 'language:' in result
+        assert 'type: string' in result
+
+@pytest.mark.asyncio
+async def test_aformat_to_yaml_concurrent():
+    """Test concurrent async YAML formatting."""
+    with patch('litellm.acompletion') as mock_completion:
+        mock_completion.return_value = MockResponse('test yaml')
+        optimizer = PromptOptimizer()
+        prompts = [
+            "Tell me about Python",
+            "Explain JavaScript",
+            "Describe Ruby"
+        ]
+        
+        # Run multiple format operations concurrently
+        tasks = [optimizer.aformat_to_yaml(prompt) for prompt in prompts]
+        results = await asyncio.gather(*tasks)
+        
+        assert len(results) == len(prompts)
+        assert all(isinstance(result, str) for result in results)
+        assert mock_completion.call_count == len(prompts)
+
+@pytest.mark.asyncio
+async def test_aformat_to_yaml_with_custom_config():
+    """Test async YAML formatting with custom configuration."""
+    with patch('litellm.acompletion') as mock_completion:
+        config = OptimizationConfig(temperature=0.2, max_tokens=500)
+        optimizer = PromptOptimizer(config)
+        mock_completion.return_value = MockResponse('test yaml')
+        result = await optimizer.aformat_to_yaml("test prompt")
+        
+        # Verify the completion was called with correct parameters
+        mock_completion.assert_called_once()
+        call_args = mock_completion.call_args[1]
+        assert call_args['temperature'] == 0.2
+        assert call_args['max_tokens'] == 500
+
+@pytest.mark.asyncio
+async def test_aformat_to_yaml_with_kwargs():
+    """Test async YAML formatting with additional kwargs."""
+    with patch('litellm.acompletion') as mock_completion:
+        optimizer = PromptOptimizer()
+        mock_completion.return_value = MockResponse('test yaml')
+        result = await optimizer.aformat_to_yaml("test prompt", stream=True, timeout=10)
+        
+        # Verify kwargs were passed through
+        call_args = mock_completion.call_args[1]
+        assert call_args['stream'] is True
+        assert call_args['timeout'] == 10

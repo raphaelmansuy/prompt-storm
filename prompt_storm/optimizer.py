@@ -38,6 +38,44 @@ class OptimizationConfig(BaseModel):
 class PromptOptimizer:
     """Class for optimizing prompts using LiteLLM."""
     
+    # Template for YAML formatting
+    YAML_FORMAT_TEMPLATE = (
+        "Convert the following prompt into a well-structured YAML format following this structure:\n"
+        "- Include metadata (name, version, description, author)\n"
+        "- Extract input variables with type, description, and examples\n"
+        "- Add relevant tags and categories\n"
+        "- Include the original content\n\n"
+        "Prompt to convert:\n```\n{prompt}\n```\n\n"
+        "Return only valid YAML. Follow this example structure:\n"
+        "```yaml\n"
+        "name: prompt_name\n"
+        "version: '1.0'\n"
+        "description: >-\n"
+        "  A clear description of the prompt's purpose\n"
+        "author: author_name\n"
+        "input_variables:\n"
+        "  variable_name:\n"
+        "    type: string\n"
+        "    description: Description of the variable\n"
+        "    examples:\n"
+        "      - 'Example 1'\n"
+        "      - 'Example 2'\n"
+        "tags:\n"
+        "  - relevant_tag1\n"
+        "  - relevant_tag2\n"
+        "categories:\n"
+        "  - category1\n"
+        "content: >-\n"
+        "  Original prompt content\n"
+        "```"
+    )
+
+    # System message for YAML formatting
+    YAML_FORMAT_SYSTEM_MESSAGE = {
+        "role": "system",
+        "content": "You are an expert at converting prompts into well-structured YAML format."
+    }
+    
     def __init__(self, config: Optional[OptimizationConfig] = None):
         """Initialize the prompt optimizer with optional configuration."""
         self.config = config or OptimizationConfig()
@@ -117,3 +155,61 @@ class PromptOptimizer:
             stacklevel=2
         )
         return self.optimize(prompt, **kwargs)
+
+    def format_to_yaml(self, prompt: str, **kwargs) -> str:
+        """
+        Format the given prompt into a YAML string using LiteLLM.
+        
+        Args:
+            prompt: The prompt to format
+            **kwargs: Additional arguments to pass to the LiteLLM completion
+            
+        Returns:
+            str: The formatted YAML string
+        """
+        messages = [
+            self.YAML_FORMAT_SYSTEM_MESSAGE,
+            {
+                "role": "user",
+                "content": self.YAML_FORMAT_TEMPLATE.format(prompt=prompt)
+            }
+        ]
+        
+        completion = litellm.completion(
+            model=self.config.model,
+            messages=messages,
+            temperature=self.config.temperature,
+            max_tokens=self.config.max_tokens,
+            **kwargs
+        )
+        
+        return completion.choices[0].message.content.strip()
+
+    async def aformat_to_yaml(self, prompt: str, **kwargs) -> str:
+        """
+        Asynchronously format the given prompt into a YAML string using LiteLLM.
+        
+        Args:
+            prompt: The prompt to format
+            **kwargs: Additional arguments to pass to the LiteLLM completion
+            
+        Returns:
+            str: The formatted YAML string
+        """
+        messages = [
+            self.YAML_FORMAT_SYSTEM_MESSAGE,
+            {
+                "role": "user",
+                "content": self.YAML_FORMAT_TEMPLATE.format(prompt=prompt)
+            }
+        ]
+        
+        completion = await litellm.acompletion(
+            model=self.config.model,
+            messages=messages,
+            temperature=self.config.temperature,
+            max_tokens=self.config.max_tokens,
+            **kwargs
+        )
+        
+        return completion.choices[0].message.content.strip()

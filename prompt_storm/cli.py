@@ -34,17 +34,24 @@ def cli():
               help='Output file to save the optimized prompt',
               type=click.Path(dir_okay=False),
               default=None)
+@click.option('--yaml', '-y',
+              help='Format the optimized prompt as YAML',
+              is_flag=True,
+              default=False)
 def optimize(prompt: str,
             model: str,
             max_tokens: int,
             temperature: float,
             input_file: Optional[str],
-            output_file: Optional[str]):
+            output_file: Optional[str],
+            yaml: bool):
     """
     Optimize a prompt using LLM.
     
     If --input-file is provided, the prompt argument is ignored and the content
     of the file is used instead.
+
+    If --yaml flag is set, the optimized prompt will be formatted as YAML.
     """
     try:
         # Read from input file if provided
@@ -62,6 +69,10 @@ def optimize(prompt: str,
         # Initialize optimizer and optimize prompt
         optimizer = PromptOptimizer(config)
         optimized_prompt = optimizer.optimize(prompt)
+        
+        # Format as YAML if requested
+        if yaml:
+            optimized_prompt = optimizer.format_to_yaml(optimized_prompt)
         
         # Handle output
         if output_file:
