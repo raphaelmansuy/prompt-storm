@@ -40,7 +40,7 @@ class PromptOptimizer:
     
     # Template for YAML formatting
     YAML_FORMAT_TEMPLATE = (
-        "Convert the following prompt into a well-structured YAML format following this structure:\n"
+        "You are prompt_storm (author) and you are an expert at converting prompts into well-structured YAML format. Convert the following prompt into a well-structured YAML format following this structure:\n"
         "- Include metadata (name, version, description, author)\n"
         "- Extract input variables with type, description, and examples\n"
         "- Add relevant tags and categories\n"
