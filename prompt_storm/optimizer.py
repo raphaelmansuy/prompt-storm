@@ -156,6 +156,37 @@ class PromptOptimizer:
         )
         return self.optimize(prompt, **kwargs)
 
+    def _process_yaml_content(self, completion) -> str:
+        """
+        Process the YAML content from the completion response.
+        
+        Args:
+            completion: The completion response containing the YAML content
+            
+        Returns:
+            str: The processed YAML content with markdown markers removed
+            
+        Raises:
+            RuntimeError: If the model encounters a rate limit error
+        """
+        try:
+            content = completion.choices[0].message.content.strip()
+            
+            # Remove markdown code block markers if present
+            import re
+            content = re.sub(r'^```ya?ml\s*\n', '', content, flags=re.MULTILINE)
+            content = re.sub(r'\n```\s*$', '', content, flags=re.MULTILINE)
+            
+            return content.strip()
+            
+        except Exception as e:
+            # Debug print statement
+            print(f"Exception encountered: {e}")
+            # Check if the error message indicates a rate limit issue
+            if "rate limit exceeded" in str(e).lower() or "resource_exhausted" in str(e).lower():
+                raise RuntimeError("Rate limit exceeded for model. Please try again in about an hour.") from e
+            raise
+
     def format_to_yaml(self, prompt: str, **kwargs) -> str:
         """
         Format the given prompt into a YAML string using LiteLLM.
@@ -165,7 +196,10 @@ class PromptOptimizer:
             **kwargs: Additional arguments to pass to the LiteLLM completion
             
         Returns:
-            str: The formatted YAML string
+            str: The formatted YAML string with any markdown code block markers removed
+            
+        Raises:
+            RuntimeError: If the model encounters a rate limit error
         """
         messages = [
             self.YAML_FORMAT_SYSTEM_MESSAGE,
@@ -183,7 +217,7 @@ class PromptOptimizer:
             **kwargs
         )
         
-        return completion.choices[0].message.content.strip()
+        return self._process_yaml_content(completion)
 
     async def aformat_to_yaml(self, prompt: str, **kwargs) -> str:
         """
@@ -194,7 +228,10 @@ class PromptOptimizer:
             **kwargs: Additional arguments to pass to the LiteLLM completion
             
         Returns:
-            str: The formatted YAML string
+            str: The formatted YAML string with any markdown code block markers removed
+            
+        Raises:
+            RuntimeError: If the model encounters a rate limit error
         """
         messages = [
             self.YAML_FORMAT_SYSTEM_MESSAGE,
@@ -212,4 +249,4 @@ class PromptOptimizer:
             **kwargs
         )
         
-        return completion.choices[0].message.content.strip()
+        return self._process_yaml_content(completion)

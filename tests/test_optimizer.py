@@ -217,6 +217,67 @@ def test_format_to_yaml_with_kwargs():
         assert call_args['stream'] is True
         assert call_args['timeout'] == 10
 
+def test_format_to_yaml_with_markdown_markers():
+    """Test YAML formatting with markdown code block markers."""
+    with patch('litellm.completion') as mock_completion:
+        # Test with ```yaml markers
+        yaml_with_markers = '''```yaml
+name: test_prompt
+version: '1.0'
+description: A test prompt
+content: >-
+  Tell me about Python
+```'''
+        expected_yaml = '''name: test_prompt
+version: '1.0'
+description: A test prompt
+content: >-
+  Tell me about Python'''
+        
+        mock_completion.return_value = MockResponse(yaml_with_markers)
+        optimizer = PromptOptimizer()
+        result = optimizer.format_to_yaml("Tell me about Python")
+        assert result == expected_yaml
+        
+        # Test with ```yml markers
+        yml_with_markers = '''```yml
+name: test_prompt
+version: '1.0'
+description: A test prompt
+content: >-
+  Tell me about Python
+```'''
+        mock_completion.return_value = MockResponse(yml_with_markers)
+        result = optimizer.format_to_yaml("Tell me about Python")
+        assert result == expected_yaml
+
+def test_format_to_yaml_without_markers():
+    """Test YAML formatting when no markdown markers are present."""
+    with patch('litellm.completion') as mock_completion:
+        clean_yaml = '''name: test_prompt
+version: '1.0'
+description: A test prompt
+content: >-
+  Tell me about Python'''
+        
+        mock_completion.return_value = MockResponse(clean_yaml)
+        optimizer = PromptOptimizer()
+        result = optimizer.format_to_yaml("Tell me about Python")
+        assert result == clean_yaml
+
+def test_format_to_yaml_rate_limit_error():
+    """Test handling of rate limit errors in YAML formatting."""
+    with patch('litellm.completion') as mock_completion:
+        # Simulate a rate limit error
+        mock_completion.side_effect = Exception("resource_exhausted: rate limit exceeded for model")
+        
+        optimizer = PromptOptimizer()
+        with pytest.raises(RuntimeError) as exc_info:
+            optimizer.format_to_yaml("Test prompt")
+        
+        assert "Rate limit exceeded for model" in str(exc_info.value)
+        assert "try again in about an hour" in str(exc_info.value)
+
 @pytest.mark.asyncio
 async def test_aformat_to_yaml_basic():
     """Test basic async YAML formatting with default configuration."""
