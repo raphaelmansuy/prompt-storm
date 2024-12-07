@@ -2,7 +2,6 @@
 Service interfaces for the prompt_storm package.
 """
 from abc import ABC, abstractmethod
-from typing import Optional, Dict, Any
 
 class OptimizerServiceInterface(ABC):
     """Interface for prompt optimization services."""
