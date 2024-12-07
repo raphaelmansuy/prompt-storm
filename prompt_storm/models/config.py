@@ -2,7 +2,6 @@
 Configuration models for the prompt_storm package.
 """
 from pydantic import BaseModel, Field
-from typing import Optional
 
 class OptimizationConfig(BaseModel):
     """Configuration for prompt optimization."""

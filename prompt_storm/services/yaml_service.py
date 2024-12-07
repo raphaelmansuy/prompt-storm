@@ -2,7 +2,8 @@
 Service for YAML formatting using LiteLLM.
 """
 import litellm
-from typing import Optional, Dict, Any
+import yaml
+from typing import Optional, Dict, Any, List, Union
 from prompt_storm.interfaces.service_interfaces import YAMLServiceInterface
 from prompt_storm.models.config import YAMLConfig, OptimizationConfig
 from prompt_storm.utils.response_processor import extract_content_from_completion, strip_markdown
@@ -33,6 +34,72 @@ class YAMLService(YAMLServiceInterface):
             {"role": "user", "content": yaml_prompt}
         ]
     
+    def verify_yaml(self, yaml_content: str) -> Union[None, List[str]]:
+        """
+        Verify if the YAML content is valid.
+        
+        Args:
+            yaml_content: The YAML content to verify
+            
+        Returns:
+            None if valid, List of error messages if invalid
+        """
+        try:
+            yaml.safe_load(yaml_content)
+            return None
+        except yaml.YAMLError as e:
+            if hasattr(e, 'problem_mark'):
+                line = e.problem_mark.line + 1
+                column = e.problem_mark.column + 1
+                problem = e.problem if hasattr(e, 'problem') else "Unknown error"
+                return [f"YAML Error at line {line}, column {column}: {problem}"]
+            return ["Invalid YAML format: " + str(e)]
+
+    async def fix_yaml(self, yaml_content: str) -> str:
+        """
+        Fix invalid YAML content using LiteLLM.
+        
+        Args:
+            yaml_content: The YAML content to fix
+            
+        Returns:
+            str: The fixed YAML content
+        """
+        try:
+            # First verify if it needs fixing
+            validation_result = self.verify_yaml(yaml_content)
+            if validation_result is None:
+                return yaml_content
+                
+            # Prepare the fix prompt
+            fix_prompt = (
+                "Fix the following invalid YAML content. Return only the fixed YAML, no explanations:\n\n"
+                f"```yaml\n{yaml_content}\n```\n\n"
+                "Errors found:\n" + "\n".join(validation_result)
+            )
+            
+            completion_kwargs = self._prepare_completion_kwargs()
+            messages = [
+                {"role": "system", "content": "You are an expert at fixing YAML syntax issues."},
+                {"role": "user", "content": fix_prompt}
+            ]
+            
+            response = await litellm.acompletion(
+                messages=messages,
+                **completion_kwargs
+            )
+            
+            fixed_content = extract_content_from_completion(response)
+            fixed_content = strip_markdown(fixed_content)
+            
+            # Verify the fixed content
+            if self.verify_yaml(fixed_content) is not None:
+                raise ValueError("Failed to fix YAML content")
+                
+            return fixed_content
+        except Exception as e:
+            raise handle_completion_error(e)
+
     async def format_to_yaml(self, prompt: str, **kwargs) -> str:
         """
         Asynchronously format the given prompt to YAML.
@@ -54,7 +121,14 @@ class YAMLService(YAMLServiceInterface):
             )
             
             content = extract_content_from_completion(response)
-            return strip_markdown(content)
+            yaml_content = strip_markdown(content)
+            
+            # Verify and fix if needed
+            validation_result = self.verify_yaml(yaml_content)
+            if validation_result is not None:
+                yaml_content = await self.fix_yaml(yaml_content)
+                
+            return yaml_content
         except Exception as e:
             raise handle_completion_error(e)
     
@@ -79,6 +153,13 @@ class YAMLService(YAMLServiceInterface):
             )
             
             content = extract_content_from_completion(response)
-            return strip_markdown(content)
+            yaml_content = strip_markdown(content)
+            
+            # Verify and fix if needed
+            validation_result = self.verify_yaml(yaml_content)
+            if validation_result is not None:
+                raise ValueError("Failed to format YAML content")
+                
+            return yaml_content
         except Exception as e:
             raise handle_completion_error(e)
