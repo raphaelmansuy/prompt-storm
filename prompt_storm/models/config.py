@@ -1,11 +1,16 @@
 """
 Configuration models for the prompt_storm package.
 """
+
 from pydantic import BaseModel, Field
+
 
 class OptimizationConfig(BaseModel):
     """Configuration for prompt optimization."""
-    model: str = Field(default="gpt-4o-mini", description="Model to use for optimization")
+
+    model: str = Field(
+        default="gpt-4o-mini", description="Model to use for optimization"
+    )
     temperature: float = Field(default=0.7, description="Temperature for generation")
     max_tokens: int = Field(default=2000, description="Maximum tokens in response")
     language: str = Field(default="english", description="Language for optimization")
@@ -29,43 +34,49 @@ class OptimizationConfig(BaseModel):
             "13. Induce CoT, Chain of Thought if applicable, to reason step by step\n\n"
             "Provide only the optimized prompt. No explanations or comments."
         ),
-        description="Template for prompt optimization"
+        description="Template for prompt optimization",
     )
 
+
 class YAMLConfig(BaseModel):
+    YAML_TEMPLATE = """
+```yaml
+name: Prompt Name
+version: '1.0'
+description: >-
+  A clear description of the prompt's purpose
+author: quantalogic
+input_variables:
+  variable_name:
+    type: string
+    description: Description of the variable
+    examples:
+      - 'Example 1'
+      - 'Example 2'
+tags:
+  - relevant_tag1
+  - relevant_tag2
+categories:
+  - category1
+content: >-
+  Original prompt content
+```
+"""
+
     """Configuration for YAML formatting."""
     template: str = Field(
         default=(
             "You are prompt_storm (author) and you are an expert at converting prompts into "
             "well-structured YAML format. Convert the following prompt into a well-structured "
             "YAML format following this structure:\n"
-            "- Include metadata (name, version, description, author)\n"
-            "- Extract input variables with type, description, and examples\n"
+            "- Include metadata (name, version, description, author) in {language}\n"
+            "- Extract input variables with type, description, and examples in {language}\n"
             "- Add relevant tags and categories\n"
-            "- Include the original content\n\n"
+            "- Include the original content in {language}\n\n"
             "Prompt to convert:\n```\n{prompt}\n```\n\n"
-            "Return only valid YAML. Follow this example structure:\n"
-            "```yaml\n"
-            "name: prompt_name\n"
-            "version: '1.0'\n"
-            "description: >-\n"
-            "  A clear description of the prompt's purpose\n"
-            "author: author_name\n"
-            "input_variables:\n"
-            "  variable_name:\n"
-            "    type: string\n"
-            "    description: Description of the variable\n"
-            "    examples:\n"
-            "      - 'Example 1'\n"
-            "      - 'Example 2'\n"
-            "tags:\n"
-            "  - relevant_tag1\n"
-            "  - relevant_tag2\n"
-            "categories:\n"
-            "  - category1\n"
-            "content: >-\n"
-            "  Original prompt content\n"
-            "```"
+            "Very important: name, description, tags, categories, and content MUST all be in {language}.\n"
+            "Return only valid YAML. Follow this example structure:\n",
+            "{yaml_example}\n\n",
         ),
-        description="Template for YAML formatting"
+        description="Template for YAML formatting",
     )
