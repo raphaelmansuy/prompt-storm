@@ -39,3 +39,12 @@ class BatchOptimizerServiceInterface(ABC):
     ) -> dict[str, str]:
         """Optimize a batch of prompts from CSV and save to YAML files."""
         pass
+
+class TranslationServiceInterface(ABC):
+    """Interface for translation services."""
+    
+    @abstractmethod
+    def translate(self, text: str, target_language: str) -> str:
+        """Translate the given text to the target language."""
+        pass
+

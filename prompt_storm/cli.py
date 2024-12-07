@@ -85,7 +85,7 @@ def optimize(prompt: str,
         config = OptimizationConfig(
             model=model,
             max_tokens=max_tokens,
-            temperature=temperature
+            temperature=temperature,
         )
         
         # Initialize optimizer and optimize prompt
@@ -158,9 +158,17 @@ def optimize_batch(input_csv: str,
             logger.info(f"Model: {model}")
             logger.info(f"Language: {language}")
 
+                # Create configuration
+        config = OptimizationConfig(
+            model=model,
+            max_tokens=max_tokens,
+            temperature=temperature,
+            language=language
+        )
+
         # Initialize services
-        optimizer_service = PromptOptimizer()
-        yaml_service = YAMLService()
+        optimizer_service = PromptOptimizer(config)
+        yaml_service = YAMLService(config)
         csv_service = CSVService()
         
         # Initialize batch optimizer with services

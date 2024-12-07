@@ -4,6 +4,30 @@ Configuration models for the prompt_storm package.
 
 from pydantic import BaseModel, Field
 
+YAML_EXAMPLE = """
+```yaml
+name: "prompt_name"
+version: '1.0'
+description: >-
+  A clear description of the prompt's purpose
+author: quantalogic
+input_variables:
+  variable_name:
+    type: string
+    description: >-
+      A description of the variable
+    examples:
+      - "Example 1"
+      - "Example 2"
+tags:
+  - "relevant_tag1"
+  - "relevant_tag2"
+categories:
+  - "category1"
+content: >-
+  Original prompt content
+```
+"""
 
 class OptimizationConfig(BaseModel):
     """Configuration for prompt optimization."""
@@ -39,30 +63,6 @@ class OptimizationConfig(BaseModel):
 
 
 class YAMLConfig(BaseModel):
-    YAML_TEMPLATE = """
-```yaml
-name: Prompt Name
-version: '1.0'
-description: >-
-  A clear description of the prompt's purpose
-author: quantalogic
-input_variables:
-  variable_name:
-    type: string
-    description: Description of the variable
-    examples:
-      - 'Example 1'
-      - 'Example 2'
-tags:
-  - relevant_tag1
-  - relevant_tag2
-categories:
-  - category1
-content: >-
-  Original prompt content
-```
-"""
-
     """Configuration for YAML formatting."""
     template: str = Field(
         default=(

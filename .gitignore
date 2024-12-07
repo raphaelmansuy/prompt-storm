@@ -25,5 +25,7 @@ build/
 Thumbs.db
 
 input/
+out_dir/
+out_dir_old/
 
 .coverage

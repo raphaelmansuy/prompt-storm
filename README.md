@@ -127,3 +127,12 @@ We welcome contributions! Here's how you can help:
 ## License
 
 This project is licensed under the MIT License. See the LICENSE file for details.
+
+
+## Models
+
+Currently supported models:
+- `gpt-4o-mini`
+- `bedrock/amazon.nova-pro-v1:0` 
+- `bedrock/amazon.nova-micro-v1:0`
+- `bedrock/amazon.nova-lite-v1:0`
