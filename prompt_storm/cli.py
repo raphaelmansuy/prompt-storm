@@ -8,6 +8,9 @@ from typing import Optional
 import click
 from rich.console import Console
 from .optimizer import PromptOptimizer, OptimizationConfig
+from .services.yaml_service import YAMLService
+from .services.csv_service import CSVService
+from .services.batch_optimizer_service import BatchOptimizerService
 from .utils.logger import setup_logger, console
 
 # Initialize with non-verbose logging by default
@@ -122,6 +125,9 @@ def optimize(prompt: str,
               help='Temperature for generation',
               type=click.FloatRange(min=0.0, max=1.0),
               default=0.7)
+@click.option('--language', '-l',
+              help='Language for optimization',
+              default="english")
 @click.option('--verbose', '-v',
               help='Enable verbose logging',
               is_flag=True,
@@ -132,6 +138,7 @@ def optimize_batch(input_csv: str,
                   model: str,
                   max_tokens: int,
                   temperature: float,
+                  language: str,
                   verbose: bool):
     """
     Optimize a batch of prompts from a CSV file.
@@ -149,34 +156,30 @@ def optimize_batch(input_csv: str,
             logger.info(f"Input CSV: {input_csv}")
             logger.info(f"Output directory: {output_dir}")
             logger.info(f"Model: {model}")
-        
-        config = OptimizationConfig(
-            model=model,
-            max_tokens=max_tokens,
-            temperature=temperature
-        )
-        
+            logger.info(f"Language: {language}")
+
         # Initialize services
-        from .services.csv_service import CSVService
-        from .services.yaml_service import YAMLService
-        from .services.batch_optimizer_service import BatchOptimizerService
-        
-        optimizer = PromptOptimizer(config)
-        yaml_service = YAMLService(config)
+        optimizer_service = PromptOptimizer()
+        yaml_service = YAMLService()
         csv_service = CSVService()
         
-        batch_service = BatchOptimizerService(
-            optimizer_service=optimizer,
+        # Initialize batch optimizer with services
+        batch_optimizer = BatchOptimizerService(
+            optimizer_service=optimizer_service,
             yaml_service=yaml_service,
             csv_service=csv_service,
-            config=config
+            verbose=verbose
         )
         
-        # Process batch
-        results = batch_service.optimize_batch(
+        # Run batch optimization
+        results = batch_optimizer.optimize_batch(
             input_csv=input_csv,
             output_dir=output_dir,
-            prompt_column=prompt_column
+            prompt_column=prompt_column,
+            model=model,
+            max_tokens=max_tokens,
+            temperature=temperature,
+            language=language
         )
         
         # Print final summary

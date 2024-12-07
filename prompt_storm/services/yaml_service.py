@@ -28,9 +28,20 @@ class YAMLService(YAMLServiceInterface):
     
     def _prepare_messages(self, prompt: str) -> list:
         """Prepare messages for completion API call."""
-        yaml_prompt = self.yaml_config.template.format(prompt=prompt)
+        # Use language from optimization config, default to 'english' if not set
+        language = getattr(self.optimization_config, 'language', 'english')
+        
+        yaml_prompt = self.yaml_config.template.format(prompt=prompt, language=language)
+        system_prompt = "".join(
+            [
+                "You are prompt_storm (author) and you are an expert at converting prompts into well-structured YAML format.",
+                "You will be given a prompt and your task is to convert it into a valid YAML format.",
+                "The YAML format should be well-structured and contain all the necessary information to be used effectively.",
+                f"Use language: {language} for prompt content, and the description will be in {language}.",
+            ]
+        )
         return [
-            {"role": "system", "content": "You are an expert at converting prompts into well-structured YAML format."},
+            {"role": "system", "content": system_prompt},
             {"role": "user", "content": yaml_prompt}
         ]
     

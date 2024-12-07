@@ -8,6 +8,7 @@ class OptimizationConfig(BaseModel):
     model: str = Field(default="gpt-4o-mini", description="Model to use for optimization")
     temperature: float = Field(default=0.7, description="Temperature for generation")
     max_tokens: int = Field(default=2000, description="Maximum tokens in response")
+    language: str = Field(default="english", description="Language for optimization")
     template: str = Field(
         default=(
             "As an expert Prompt Engineer, enhance the following prompt:\n\n"

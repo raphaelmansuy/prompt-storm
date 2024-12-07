@@ -84,7 +84,11 @@ class BatchOptimizerService(BatchOptimizerServiceInterface):
         self,
         input_csv: str,
         output_dir: str,
-        prompt_column: str
+        prompt_column: str,
+        model: str = None,
+        max_tokens: int = None,
+        temperature: float = None,
+        language: str = None
     ) -> Dict[str, str]:
         """
         Optimize a batch of prompts from CSV and save to YAML files.
@@ -93,10 +97,24 @@ class BatchOptimizerService(BatchOptimizerServiceInterface):
             input_csv: Path to input CSV file
             output_dir: Directory to save optimized prompts
             prompt_column: Name of the column containing prompts
+            model: Model to use for optimization (optional)
+            max_tokens: Maximum tokens in response (optional)
+            temperature: Temperature for generation (optional)
+            language: Language for optimization (optional)
             
         Returns:
             Dictionary mapping original prompts to output file paths
         """
+        # Update config with any provided parameters
+        if model is not None:
+            self.config.model = model
+        if max_tokens is not None:
+            self.config.max_tokens = max_tokens
+        if temperature is not None:
+            self.config.temperature = temperature
+        if language is not None:
+            self.config.language = language
+
         # Create output directory
         output_path = Path(output_dir)
         output_path.mkdir(parents=True, exist_ok=True)
