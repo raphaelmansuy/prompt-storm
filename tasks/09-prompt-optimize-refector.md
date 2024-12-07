@@ -79,5 +79,6 @@ You are a 10x Software Engineer
 - Refactor the optimizer.py module to make it more readable and maintainable
 - Be extra careful about the refactoring, features and requirements must be absolutely preserved, no modifications are allowed
 - Maintain the same functionality as before, but make it more readable and maintainable
+- Propose a service architecture for the refactored code
 
 

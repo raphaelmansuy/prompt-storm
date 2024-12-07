@@ -5,13 +5,6 @@ import warnings
 from unittest.mock import patch, AsyncMock, MagicMock
 from prompt_storm.optimizer import PromptOptimizer, OptimizationConfig
 
-@pytest.fixture(scope="function")
-def event_loop():
-    """Create an instance of the default event loop for each test case."""
-    loop = asyncio.new_event_loop()
-    yield loop
-    loop.close()
-
 class MockResponse:
     """Mock response for litellm completion calls."""
     def __init__(self, content):
@@ -98,11 +91,12 @@ content: >-
 """
         mock_acompletion.return_value = MockResponse(mock_response)
         optimizer = PromptOptimizer()
-        result = await optimizer.aformat_to_yaml("test prompt")
+        result = await optimizer.aoptimize("test prompt")
         assert isinstance(result, str)
         assert 'name:' in result
         assert 'version:' in result
         assert 'content:' in result
+        mock_acompletion.assert_called_once()
 
 @pytest.mark.asyncio
 async def test_aoptimize_with_custom_config():
