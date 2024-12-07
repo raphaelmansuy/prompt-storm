@@ -3,9 +3,18 @@ Prompt Optimization Module.
 
 This module provides functionality to optimize prompts using LiteLLM.
 """
-from typing import Optional
+from typing import Optional, List, Union
 from pydantic import BaseModel, Field
 import litellm
+import yaml
+from dataclasses import dataclass
+
+@dataclass
+class YAMLValidationError:
+    """Represents a YAML validation error."""
+    message: str
+    line: Optional[int] = None
+    column: Optional[int] = None
 
 class OptimizationConfig(BaseModel):
     """Configuration for prompt optimization."""
@@ -200,6 +209,7 @@ class PromptOptimizer:
             
         Raises:
             RuntimeError: If the model encounters a rate limit error
+            ValueError: If the generated YAML is invalid
         """
         messages = [
             self.YAML_FORMAT_SYSTEM_MESSAGE,
@@ -217,7 +227,19 @@ class PromptOptimizer:
             **kwargs
         )
         
-        return self._process_yaml_content(completion)
+        yaml_content = self._process_yaml_content(completion)
+        
+        # Verify the generated YAML
+        errors = self.verify_yaml(yaml_content)
+        if errors:
+            error_messages = "\n".join(
+                f"Line {e.line}, Column {e.column}: {e.message}" if e.line and e.column
+                else e.message
+                for e in errors
+            )
+            raise ValueError(f"Generated YAML is invalid:\n{error_messages}")
+        
+        return yaml_content
 
     async def aformat_to_yaml(self, prompt: str, **kwargs) -> str:
         """
@@ -232,6 +254,7 @@ class PromptOptimizer:
             
         Raises:
             RuntimeError: If the model encounters a rate limit error
+            ValueError: If the generated YAML is invalid
         """
         messages = [
             self.YAML_FORMAT_SYSTEM_MESSAGE,
@@ -247,6 +270,101 @@ class PromptOptimizer:
             temperature=self.config.temperature,
             max_tokens=self.config.max_tokens,
             **kwargs
+        )
+        
+        yaml_content = self._process_yaml_content(completion)
+        
+        # Verify the generated YAML
+        errors = self.verify_yaml(yaml_content)
+        if errors:
+            # Try to fix the YAML if it's invalid
+            try:
+                yaml_content = await self.fix_yaml(yaml_content)
+                # Verify the fixed YAML
+                errors = self.verify_yaml(yaml_content)
+                if errors:
+                    error_messages = "\n".join(
+                        f"Line {e.line}, Column {e.column}: {e.message}" if e.line and e.column
+                        else e.message
+                        for e in errors
+                    )
+                    raise ValueError(f"Unable to fix YAML:\n{error_messages}")
+            except Exception as e:
+                raise ValueError(f"Failed to fix YAML: {str(e)}")
+        
+        return yaml_content
+
+    def verify_yaml(self, yaml_content: str) -> Union[None, List[YAMLValidationError]]:
+        """
+        Verify if the YAML content is valid.
+        
+        Args:
+            yaml_content: The YAML content to verify
+            
+        Returns:
+            None if valid, List[YAMLValidationError] if invalid
+        """
+        try:
+            # Try to parse the YAML content
+            yaml.safe_load(yaml_content)
+            
+            # Check for required fields
+            required_fields = ['name', 'version', 'description', 'author', 'content']
+            data = yaml.safe_load(yaml_content)
+            
+            missing_fields = [field for field in required_fields if field not in data]
+            if missing_fields:
+                return [YAMLValidationError(
+                    message=f"Missing required fields: {', '.join(missing_fields)}"
+                )]
+                
+            return None
+        except yaml.YAMLError as e:
+            # Convert YAML error to our custom error format
+            if hasattr(e, 'problem_mark'):
+                return [YAMLValidationError(
+                    message=str(e.problem),
+                    line=e.problem_mark.line + 1,
+                    column=e.problem_mark.column + 1
+                )]
+            return [YAMLValidationError(message=str(e))]
+
+    async def fix_yaml(self, yaml_content: str) -> str:
+        """
+        Fix invalid YAML content using LiteLLM.
+        
+        Args:
+            yaml_content: The invalid YAML content to fix
+            
+        Returns:
+            str: The fixed YAML content
+            
+        Raises:
+            RuntimeError: If the model encounters a rate limit error
+        """
+        fix_template = (
+            "Fix the following invalid YAML content. Ensure it follows the correct structure "
+            "with required fields (name, version, description, author, content). "
+            "Return only the fixed YAML, no explanations.\n\n"
+            "Invalid YAML:\n```yaml\n{yaml_content}\n```"
+        )
+        
+        messages = [
+            {
+                "role": "system",
+                "content": "You are an expert at fixing YAML syntax and structure issues."
+            },
+            {
+                "role": "user",
+                "content": fix_template.format(yaml_content=yaml_content)
+            }
+        ]
+        
+        completion = await litellm.acompletion(
+            model=self.config.model,
+            messages=messages,
+            temperature=0.2,  # Lower temperature for more consistent fixes
+            max_tokens=self.config.max_tokens
         )
         
         return self._process_yaml_content(completion)
