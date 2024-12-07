@@ -38,7 +38,7 @@ class OptimizationConfig(BaseModel):
             "10. Incorporate a suitable persona if beneficial\n"
             "11. Use clear, unambiguous language\n"
             "12. Include examples or demonstrations if helpful\n"
-            "13. Induce CoT, Chain of Thought if applicable\n\n"
+            "13. Induce CoT, Chain of Thought if applicable, to reason step by step\n\n"
             "Provide only the optimized prompt. No explanations or comments."
         ),
         description="Template for prompt optimization"
@@ -118,7 +118,8 @@ class PromptOptimizer:
         )
         
         # Extract and return the optimized prompt
-        return response.choices[0].message.content.strip()
+        content = self._get_striped_response(response)
+        return content
 
     async def aoptimize(self, prompt: str, **kwargs) -> str:
         """
@@ -149,7 +150,7 @@ class PromptOptimizer:
         )
         
         # Extract and return the optimized prompt
-        return response.choices[0].message.content.strip()
+        return self._get_striped_response(response)
 
     def optimize_async(self, prompt: str, **kwargs) -> str:
         """
@@ -165,6 +166,14 @@ class PromptOptimizer:
         )
         return self.optimize(prompt, **kwargs)
 
+    def _get_striped_response(self, prompt: str, **kwargs) -> str:
+        content = prompt.choices[0].message.content.strip() # Remove markdown code block markers if present
+        import re
+        content = re.sub(r'^```\s*\n', '', content, flags=re.MULTILINE)
+        content = re.sub(r'\n```\s*$', '', content, flags=re.MULTILINE)
+        return content.strip()
+
+
     def _process_yaml_content(self, completion) -> str:
         """
         Process the YAML content from the completion response.
@@ -179,15 +188,8 @@ class PromptOptimizer:
             RuntimeError: If the model encounters a rate limit error
         """
         try:
-            content = completion.choices[0].message.content.strip()
-            
-            # Remove markdown code block markers if present
-            import re
-            content = re.sub(r'^```ya?ml\s*\n', '', content, flags=re.MULTILINE)
-            content = re.sub(r'\n```\s*$', '', content, flags=re.MULTILINE)
-            
-            return content.strip()
-            
+            content = self._get_striped_response(completion)
+            return content
         except Exception as e:
             error_msg = str(e).lower()
             if "rate limit" in error_msg or "resource_exhausted" in error_msg:
