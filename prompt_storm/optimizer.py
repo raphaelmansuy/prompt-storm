@@ -3,7 +3,7 @@ Prompt Optimization Module.
 
 This module provides functionality to optimize prompts using LiteLLM.
 """
-from typing import Optional, List, Union
+from typing import Optional, List, Union, Dict
 from pydantic import BaseModel, Field
 import litellm
 import yaml
@@ -189,57 +189,125 @@ class PromptOptimizer:
             return content.strip()
             
         except Exception as e:
-            # Debug print statement
-            print(f"Exception encountered: {e}")
-            # Check if the error message indicates a rate limit issue
-            if "rate limit exceeded" in str(e).lower() or "resource_exhausted" in str(e).lower():
-                raise RuntimeError("Rate limit exceeded for model. Please try again in about an hour.") from e
-            raise
+            error_msg = str(e).lower()
+            if "rate limit" in error_msg or "resource_exhausted" in error_msg:
+                raise RuntimeError(
+                    "Rate limit exceeded for model. Please wait a few minutes and try again, "
+                    "or consider upgrading your API plan for higher rate limits."
+                ) from e
+            raise RuntimeError(f"Error processing YAML content: {str(e)}") from e
 
-    def format_to_yaml(self, prompt: str, **kwargs) -> str:
+    def _prepare_messages(self, prompt: str) -> List[dict]:
         """
-        Format the given prompt into a YAML string using LiteLLM.
+        Prepare messages for both sync and async versions.
         
         Args:
             prompt: The prompt to format
-            **kwargs: Additional arguments to pass to the LiteLLM completion
             
         Returns:
-            str: The formatted YAML string with any markdown code block markers removed
-            
-        Raises:
-            RuntimeError: If the model encounters a rate limit error
-            ValueError: If the generated YAML is invalid
+            List[dict]: List of messages for the LLM
         """
-        messages = [
+        return [
             self.YAML_FORMAT_SYSTEM_MESSAGE,
             {
                 "role": "user",
                 "content": self.YAML_FORMAT_TEMPLATE.format(prompt=prompt)
             }
         ]
+
+    def _prepare_completion_kwargs(self, **kwargs) -> dict:
+        """
+        Prepare completion kwargs for both versions.
         
-        completion = litellm.completion(
-            model=self.config.model,
-            messages=messages,
-            temperature=self.config.temperature,
-            max_tokens=self.config.max_tokens,
+        Args:
+            **kwargs: Additional arguments to pass to the LiteLLM completion
+            
+        Returns:
+            dict: Combined completion arguments
+        """
+        return {
+            "model": self.config.model,
+            "temperature": self.config.temperature,
+            "max_tokens": self.config.max_tokens,
             **kwargs
-        )
+        }
+
+    def _handle_yaml_errors(self, errors: Optional[List[YAMLValidationError]]) -> None:
+        """
+        Handle YAML validation errors for both versions.
         
-        yaml_content = self._process_yaml_content(completion)
-        
-        # Verify the generated YAML
-        errors = self.verify_yaml(yaml_content)
+        Args:
+            errors: List of YAML validation errors if any
+            
+        Raises:
+            ValueError: If there are any YAML validation errors
+        """
         if errors:
-            error_messages = "\n".join(
-                f"Line {e.line}, Column {e.column}: {e.message}" if e.line and e.column
-                else e.message
-                for e in errors
+            error_messages = []
+            for e in errors:
+                if e.line and e.column:
+                    error_messages.append(f"Line {e.line}, Column {e.column}: {e.message}")
+                else:
+                    error_messages.append(e.message)
+            
+            error_str = "\n".join(error_messages)
+            raise ValueError(
+                f"Generated YAML is invalid. Please ensure all required fields "
+                f"(name, version, description, content) are present and properly formatted:\n{error_str}"
             )
-            raise ValueError(f"Generated YAML is invalid:\n{error_messages}")
+
+    def _base_format_to_yaml(self, completion) -> str:
+        """
+        Base method for processing YAML formatting results.
         
+        Args:
+            completion: The completion response from LiteLLM
+            
+        Returns:
+            str: Processed and validated YAML content
+            
+        Raises:
+            ValueError: If the generated YAML is invalid
+        """
+        yaml_content = self._process_yaml_content(completion)
+        errors = self.verify_yaml(yaml_content)
+        self._handle_yaml_errors(errors)
         return yaml_content
+
+    def format_to_yaml(self, prompt: str, **kwargs) -> str:
+        """
+        Format a prompt into a YAML format.
+
+        Args:
+            prompt: The prompt to format
+            **kwargs: Additional keyword arguments to pass to the completion API
+
+        Returns:
+            str: The formatted YAML content
+
+        Raises:
+            RuntimeError: If there is an error during formatting
+        """
+        try:
+            completion = litellm.completion(
+                model=self.config.model,
+                messages=[{
+                    "role": "user",
+                    "content": self.YAML_FORMAT_TEMPLATE.format(prompt=prompt)
+                }],
+                temperature=self.config.temperature,
+                max_tokens=self.config.max_tokens,
+                **kwargs
+            )
+            
+            return self._base_format_to_yaml(completion)
+        except Exception as e:
+            error_msg = str(e)
+            if "rate limit" in error_msg.lower():
+                raise RuntimeError(
+                    "Rate limit exceeded for model. Please wait a few minutes before trying again."
+                ) from e
+            raise RuntimeError(f"Error formatting prompt to YAML: {error_msg}") from e
 
     async def aformat_to_yaml(self, prompt: str, **kwargs) -> str:
         """
@@ -256,39 +324,23 @@ class PromptOptimizer:
             RuntimeError: If the model encounters a rate limit error
             ValueError: If the generated YAML is invalid
         """
-        messages = [
-            self.YAML_FORMAT_SYSTEM_MESSAGE,
-            {
-                "role": "user",
-                "content": self.YAML_FORMAT_TEMPLATE.format(prompt=prompt)
-            }
-        ]
+        messages = self._prepare_messages(prompt)
+        completion_kwargs = self._prepare_completion_kwargs(**kwargs)
         
         completion = await litellm.acompletion(
-            model=self.config.model,
             messages=messages,
-            temperature=self.config.temperature,
-            max_tokens=self.config.max_tokens,
-            **kwargs
+            **completion_kwargs
         )
         
-        yaml_content = self._process_yaml_content(completion)
+        yaml_content = self._base_format_to_yaml(completion)
         
-        # Verify the generated YAML
+        # Verify and attempt to fix if invalid
         errors = self.verify_yaml(yaml_content)
         if errors:
-            # Try to fix the YAML if it's invalid
             try:
                 yaml_content = await self.fix_yaml(yaml_content)
-                # Verify the fixed YAML
                 errors = self.verify_yaml(yaml_content)
-                if errors:
-                    error_messages = "\n".join(
-                        f"Line {e.line}, Column {e.column}: {e.message}" if e.line and e.column
-                        else e.message
-                        for e in errors
-                    )
-                    raise ValueError(f"Unable to fix YAML:\n{error_messages}")
+                self._handle_yaml_errors(errors)
             except Exception as e:
                 raise ValueError(f"Failed to fix YAML: {str(e)}")
         
@@ -306,13 +358,16 @@ class PromptOptimizer:
         """
         try:
             # Try to parse the YAML content
-            yaml.safe_load(yaml_content)
-            
-            # Check for required fields
-            required_fields = ['name', 'version', 'description', 'author', 'content']
             data = yaml.safe_load(yaml_content)
             
+            # Basic validation
+            if not isinstance(data, dict):
+                return [YAMLValidationError(message="YAML content must be a dictionary")]
+                
+            # Required fields validation
+            required_fields = ['name', 'version', 'description', 'content']
             missing_fields = [field for field in required_fields if field not in data]
+            
             if missing_fields:
                 return [YAMLValidationError(
                     message=f"Missing required fields: {', '.join(missing_fields)}"
@@ -344,7 +399,7 @@ class PromptOptimizer:
         """
         fix_template = (
             "Fix the following invalid YAML content. Ensure it follows the correct structure "
-            "with required fields (name, version, description, author, content). "
+            "with required fields (name, version, description, content). "
             "Return only the fixed YAML, no explanations.\n\n"
             "Invalid YAML:\n```yaml\n{yaml_content}\n```"
         )
