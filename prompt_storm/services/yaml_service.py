@@ -55,7 +55,7 @@ class YAMLService(YAMLServiceInterface):
                 return [f"YAML Error at line {line}, column {column}: {problem}"]
             return ["Invalid YAML format: " + str(e)]
 
-    async def fix_yaml(self, yaml_content: str) -> str:
+    def fix_yaml(self, yaml_content: str) -> str:
         """
         Fix invalid YAML content using LiteLLM.
         
@@ -84,7 +84,7 @@ class YAMLService(YAMLServiceInterface):
                 {"role": "user", "content": fix_prompt}
             ]
             
-            response = await litellm.acompletion(
+            response = litellm.completion(
                 messages=messages,
                 **completion_kwargs
             )
@@ -100,41 +100,9 @@ class YAMLService(YAMLServiceInterface):
         except Exception as e:
             raise handle_completion_error(e)
 
-    async def format_to_yaml(self, prompt: str, **kwargs) -> str:
+    def format_to_yaml(self, prompt: str, **kwargs) -> str:
         """
-        Asynchronously format the given prompt to YAML.
-        
-        Args:
-            prompt: The prompt to format
-            **kwargs: Additional arguments to pass to the LiteLLM completion
-        
-        Returns:
-            str: The formatted YAML string
-        """
-        try:
-            completion_kwargs = self._prepare_completion_kwargs(**kwargs)
-            messages = self._prepare_messages(prompt)
-            
-            response = await litellm.acompletion(
-                messages=messages,
-                **completion_kwargs
-            )
-            
-            content = extract_content_from_completion(response)
-            yaml_content = strip_markdown(content)
-            
-            # Verify and fix if needed
-            validation_result = self.verify_yaml(yaml_content)
-            if validation_result is not None:
-                yaml_content = await self.fix_yaml(yaml_content)
-                
-            return yaml_content
-        except Exception as e:
-            raise handle_completion_error(e)
-    
-    def format_to_yaml_sync(self, prompt: str, **kwargs) -> str:
-        """
-        Synchronously format the given prompt to YAML.
+        Format the given prompt to YAML.
         
         Args:
             prompt: The prompt to format
@@ -158,7 +126,7 @@ class YAMLService(YAMLServiceInterface):
             # Verify and fix if needed
             validation_result = self.verify_yaml(yaml_content)
             if validation_result is not None:
-                raise ValueError("Failed to format YAML content")
+                yaml_content = self.fix_yaml(yaml_content)
                 
             return yaml_content
         except Exception as e:

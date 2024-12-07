@@ -1,11 +1,9 @@
 """
 Service for batch optimization of prompts.
 """
-import os
-import asyncio
 from pathlib import Path
-from typing import Dict, List, Optional
-import litellm
+from typing import Dict, Optional
+import yaml
 from prompt_storm.interfaces.service_interfaces import (
     BatchOptimizerServiceInterface,
     OptimizerServiceInterface,
@@ -37,9 +35,9 @@ class BatchOptimizerService(BatchOptimizerServiceInterface):
         global logger
         logger = setup_logger(__name__, verbose=verbose)
         
-    async def _infer_category_and_name(self, prompt: str) -> tuple[str, str]:
+    def _infer_category_and_name(self, prompt: str) -> tuple[str, str]:
         """
-        Infer category and name for a prompt using LLM.
+        Infer category and name from YAML inference.
         
         Args:
             prompt: The prompt to categorize
@@ -47,27 +45,25 @@ class BatchOptimizerService(BatchOptimizerServiceInterface):
         Returns:
             Tuple of (category, name)
         """
-        messages = [
-            {"role": "system", "content": "You are an expert at categorizing prompts. Respond with exactly two lines: first line is a single word category, second line is a short kebab-case name."},
-            {"role": "user", "content": f"Categorize this prompt:\n{prompt}"}
-        ]
-        
-        completion = await litellm.acompletion(
-            model=self.config.model,
-            messages=messages,
-            temperature=0.3,
-            max_tokens=50
-        )
-        
-        response = completion.choices[0].message.content.strip().split('\n')
-        if len(response) != 2:
-            logger.warning(f"Invalid categorization response format: {response}")
-            return "general", "unnamed-prompt"
+        try:
+            # Get YAML representation
+            yaml_content = self.yaml_service.format_to_yaml(prompt)
             
-        category, name = response
-        if self.verbose:
-            logger.debug(f"Inferred category: {category}, name: {name}")
-        return category.lower(), name.lower()
+            # Parse YAML to get category and name
+            yaml_data = yaml.safe_load(yaml_content)
+            
+            # Extract first category and name
+            category = yaml_data.get('categories', ['general'])[0].lower()
+            name = yaml_data.get('name', 'unnamed-prompt').lower()
+            
+            if self.verbose:
+                logger.debug(f"Inferred from YAML - category: {category}, name: {name}")
+            
+            return category, name
+            
+        except Exception as e:
+            logger.warning(f"Error inferring from YAML: {str(e)}")
+            return "general", "unnamed-prompt"
         
     def _get_unique_filepath(self, directory: Path, filename: str) -> Path:
         """Get a unique filepath by appending numbers if necessary."""
@@ -84,7 +80,7 @@ class BatchOptimizerService(BatchOptimizerServiceInterface):
                 return new_path
             counter += 1
             
-    async def optimize_batch(
+    def optimize_batch(
         self,
         input_csv: str,
         output_dir: str,
@@ -110,7 +106,7 @@ class BatchOptimizerService(BatchOptimizerServiceInterface):
         # Read prompts
         if self.verbose:
             logger.info(f"Reading prompts from {input_csv}")
-        prompts = await self.csv_service.read_prompts(input_csv, prompt_column)
+        prompts = self.csv_service.read_prompts(input_csv, prompt_column)
         if self.verbose:
             logger.info(f"Found {len(prompts)} prompts to process")
         
@@ -125,12 +121,12 @@ class BatchOptimizerService(BatchOptimizerServiceInterface):
                     # Optimize prompt
                     if self.verbose:
                         logger.debug(f"Optimizing prompt {i}")
-                    optimized = await self.optimizer_service.optimize(prompt)
+                    optimized = self.optimizer_service.optimize(prompt)
                     
                     # Infer category and name
                     if self.verbose:
                         logger.debug(f"Categorizing prompt {i}")
-                    category, name = await self._infer_category_and_name(prompt)
+                    category, name = self._infer_category_and_name(prompt)
                     
                     # Create category directory
                     category_dir = output_path / category
@@ -142,7 +138,7 @@ class BatchOptimizerService(BatchOptimizerServiceInterface):
                     # Format and save as YAML
                     if self.verbose:
                         logger.debug(f"Saving prompt {i} to {filepath}")
-                    yaml_content = await self.yaml_service.format_to_yaml(optimized)
+                    yaml_content = self.yaml_service.format_to_yaml(optimized)
                     filepath.write_text(yaml_content)
                     
                     progress.log_success(f"Successfully processed prompt {i} → {filepath}")

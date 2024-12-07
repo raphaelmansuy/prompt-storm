@@ -1,0 +1,39 @@
+name: audience_research_for_titles
+version: '1.0'
+description: >-
+  This prompt guides the identification and description of the target audience for a given title, considering demographics, interests, behavior, and needs.
+author: prompt_storm
+input_variables:
+  titre:
+    type: string
+    description: The title for which the target audience is to be identified and described.
+    examples:
+      - 'Recettes saines pour les familles'
+      - 'Technologies innovantes en 2023'
+tags:
+  - audience_research
+  - content_strategy
+  - marketing
+categories:
+  - research
+  - audience_analysis
+content: >-
+  # Recherche d'audience pour les titres
+
+  ## Instructions
+  Identifiez et décrivez l'audience cible pour le titre suivant : **{{titre}}**. Considérez les éléments suivants :
+
+  1. **Démographie** : Âge, sexe, localisation, niveau d'éducation
+  2. **Intérêts** : Quelles sont les passions et les hobbies de cette audience ?
+  3. **Comportement** : Comment cette audience interagit-elle avec des contenus similaires ?
+  4. **Besoins et désirs** : Quels problèmes cette audience cherche-t-elle à résoudre avec ce contenu ?
+
+  ### Exemples
+  - Pour le titre "Recettes saines pour les familles", l'audience pourrait être des parents âgés de 30 à 45 ans, intéressés par la nutrition et la cuisine rapide.
+  - Pour le titre "Technologies innovantes en 2023", l'audience pourrait inclure des professionnels de la tech âgés de 25 à 40 ans, passionnés par les nouvelles technologies et les startups.
+
+  ## Considérations Éthiques
+  Évitez les stéréotypes et assurez-vous de respecter la diversité et l'inclusion dans vos descriptions.
+
+  ## Contexte
+  Cette recherche d'audience aidera à affiner le contenu et à maximiser l'engagement. Fournissez des réponses détaillées et justifiées.

@@ -113,7 +113,7 @@ def optimize(prompt: str,
               default='prompt')
 @click.option('--model', '-m', 
               help='Model to use for optimization',
-              default="gpt-4-mini")
+              default="gpt-4o-mini")
 @click.option('--max-tokens', '-t',
               help='Maximum tokens in response',
               type=click.IntRange(min=1),
@@ -126,7 +126,7 @@ def optimize(prompt: str,
               help='Enable verbose logging',
               is_flag=True,
               default=False)
-async def optimize_batch(input_csv: str,
+def optimize_batch(input_csv: str,
                   output_dir: str,
                   prompt_column: str,
                   model: str,
@@ -173,7 +173,7 @@ async def optimize_batch(input_csv: str,
         )
         
         # Process batch
-        results = await batch_service.optimize_batch(
+        results = batch_service.optimize_batch(
             input_csv=input_csv,
             output_dir=output_dir,
             prompt_column=prompt_column

@@ -1,0 +1,58 @@
+name: Email Subject Line Suggestions for Promotions and Product Launches
+version: '1.0'
+description: >-
+  Generate compelling email subject lines that effectively capture the attention 
+  of recipients for promotional campaigns and new product launches.
+author: prompt_storm
+input_variables:
+  product_name:
+    type: string
+    description: Name of the product being launched or promoted
+    examples:
+      - 'New Smartphone'
+      - 'Organic Skin Cream'
+  discount_percentage:
+    type: string
+    description: Discount offered, if applicable
+    examples:
+      - '20%'
+      - '50%'
+  launch_date:
+    type: string
+    description: Date of the product launch
+    examples:
+      - 'March 1, 2023'
+      - 'April 15, 2023'
+tags:
+  - email marketing
+  - promotions
+  - product launch
+categories:
+  - marketing
+  - communication
+content: >-
+  # Email Subject Line Suggestions for Promotions and Product Launches
+  
+  ## Context:
+  You are tasked with generating compelling email subject lines that effectively capture the attention of recipients for promotional campaigns and new product launches. 
+  
+  ## Instructions:
+  1. Create a list of 10 unique email subject lines.
+  2. Incorporate the following variables for customization:
+     - {{product_name}}: Name of the product being launched or promoted
+     - {{discount_percentage}}: Discount offered, if applicable
+     - {{launch_date}}: Date of the product launch
+  
+  ## Format:
+  - Use the following structure for each subject line: 
+    "Exciting News: {{product_name}} Launching on {{launch_date}} with {{discount_percentage}} OFF!"
+  - Ensure each subject line is engaging, clear, and encourages the recipient to open the email.
+  
+  ## Examples:
+  1. "Don't Miss Out: {{product_name}} Launching on {{launch_date}} with {{discount_percentage}} OFF!"
+  2. "Get Ready for {{product_name}}: Exclusive {{discount_percentage}} Discount Starting {{launch_date}}!"
+  
+  ## Considerations:
+  - Avoid using language that may be perceived as spammy or misleading.
+  - Ensure inclusivity and avoid stereotypes in your suggestions.
+  - Be mindful of cultural sensitivities when crafting subject lines.

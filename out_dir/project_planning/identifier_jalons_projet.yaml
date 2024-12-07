@@ -1,0 +1,39 @@
+name: project_milestone_identifier
+version: '1.0'
+description: >-
+  A prompt for identifying the milestones of a project by defining objectives, key steps, deadlines, and necessary resources.
+author: prompt_storm
+input_variables:
+  project_name:
+    type: string
+    description: The name of the project for which milestones are to be identified.
+    examples:
+      - 'Product Launch'
+      - 'Website Redesign'
+  deadline_format:
+    type: string
+    description: The format in which the deadlines should be presented.
+    examples:
+      - 'YYYY-MM-DD'
+      - 'DD/MM/YYYY'
+tags:
+  - project_management
+  - milestone_identification
+categories:
+  - planning
+  - project_management
+content: >-
+  Veuillez identifier les jalons du projet {{project_name}} en suivant ces étapes :
+
+  1. **Définir les objectifs** : Énumérez les principaux objectifs à atteindre dans le projet.
+  2. **Lister les étapes clés** : Identifiez les étapes cruciales qui mènent à la réalisation des objectifs.
+  3. **Établir des deadlines** : Pour chaque étape, indiquez la date limite correspondante au format {{deadline_format}}.
+  4. **Décrire les ressources nécessaires** : Mentionnez les ressources ou les équipes impliquées pour chaque jalon.
+
+  **Exemple** :
+  - Objectif : Lancer le produit X
+  - Étape clé : Finaliser le design
+  - Deadline : 2023-12-01
+  - Ressources : Équipe de design, budget de 5000 EUR
+
+  Merci de présenter votre réponse de manière structurée et détaillée.

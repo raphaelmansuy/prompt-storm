@@ -8,7 +8,7 @@ from prompt_storm.interfaces.service_interfaces import CSVServiceInterface
 class CSVService(CSVServiceInterface):
     """Service for reading prompts from CSV files."""
     
-    async def read_prompts(self, csv_path: str, prompt_column: str) -> List[str]:
+    def read_prompts(self, csv_path: str, prompt_column: str) -> List[str]:
         """
         Read prompts from a CSV file.
         

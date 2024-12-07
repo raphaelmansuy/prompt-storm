@@ -29,34 +29,9 @@ class OptimizerService(OptimizerServiceInterface):
         optimization_prompt = self.config.template.format(prompt=prompt)
         return [{"role": "user", "content": optimization_prompt}]
     
-    async def optimize(self, prompt: str, **kwargs) -> str:
+    def optimize(self, prompt: str, **kwargs) -> str:
         """
-        Asynchronously optimize the given prompt.
-        
-        Args:
-            prompt: The prompt to optimize
-            **kwargs: Additional arguments to pass to the LiteLLM completion
-        
-        Returns:
-            str: The optimized prompt
-        """
-        try:
-            completion_kwargs = self._prepare_completion_kwargs(**kwargs)
-            messages = self._prepare_messages(prompt)
-            
-            response = await litellm.acompletion(
-                messages=messages,
-                **completion_kwargs
-            )
-            
-            content = extract_content_from_completion(response)
-            return strip_markdown(content)
-        except Exception as e:
-            raise handle_completion_error(e)
-    
-    def optimize_sync(self, prompt: str, **kwargs) -> str:
-        """
-        Synchronously optimize the given prompt.
+        Optimize the given prompt.
         
         Args:
             prompt: The prompt to optimize
