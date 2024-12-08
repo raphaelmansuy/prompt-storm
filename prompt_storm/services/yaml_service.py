@@ -37,7 +37,6 @@ Create the same YAML file with values translated to {self.optimization_config.la
 Format as markdown, only the YAML code block is needed.
 {yaml_example}
         """
-        print(prompt_translate)
         response = litellm.completion(
             model=self.optimization_config.model,
             messages=[{"role": "user", "content": prompt_translate}],
@@ -45,7 +44,6 @@ Format as markdown, only the YAML code block is needed.
             max_tokens=self.optimization_config.max_tokens,
         )
         result = extract_content_from_completion(response)
-        print(result)
         return result
 
     def _prepare_completion_kwargs(self, **kwargs) -> Dict[str, Any]:

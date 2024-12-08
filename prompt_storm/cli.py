@@ -158,7 +158,7 @@ def optimize_batch(input_csv: str,
             logger.info(f"Model: {model}")
             logger.info(f"Language: {language}")
 
-                # Create configuration
+        # Create configuration
         config = OptimizationConfig(
             model=model,
             max_tokens=max_tokens,
@@ -201,6 +201,60 @@ def optimize_batch(input_csv: str,
                 if result.startswith("ERROR:"):
                     console.print(f"[red]{result}[/red]")
                     
+    except Exception as e:
+        logger.error(f"Fatal error: {str(e)}", exc_info=verbose)
+        sys.exit(1)
+
+@cli.command()
+@click.argument('prompt', type=str)
+@click.option('--input-file', '-i', help='Input file containing the prompt', type=click.Path(exists=True, dir_okay=False), default=None)
+@click.option('--output-file', '-o', help='Output file to save the formatted YAML', type=click.Path(dir_okay=False), default=None)
+@click.option('--verbose', '-v', help='Enable verbose logging', is_flag=True, default=False)
+@click.option('--language', '-l', help='Language for optimization', default="english")
+@click.option('--model', '-m', help='Model to use for optimization', default="gpt-4o-mini")
+@click.option('--max-tokens', '-t', help='Maximum tokens in response', type=click.IntRange(min=1), default=2000)
+@click.option('--temperature', '-temp', help='Temperature for generation', type=click.FloatRange(min=0.0, max=1.0), default=0.7)
+def format_prompt(prompt: str, input_file: Optional[str], output_file: Optional[str], verbose: bool, language: str, model: str, max_tokens: int, temperature: float):
+    """Format a provided prompt into YAML. If --input-file is specified, the content of the file is used instead."""
+    try:
+        # Set up logger with verbose setting
+        global logger
+        logger = setup_logger(__name__, verbose=verbose)
+        if verbose:
+            logger.debug("Verbose logging enabled")
+            # display parameters
+            logger.info(f"Prompt: {prompt}")
+            logger.info(f"Language: {language}")
+            logger.info(f"Model: {model}")
+            logger.info(f"Max Tokens: {max_tokens}")
+            logger.info(f"Temperature: {temperature}")
+
+        # Create configuration
+        config = OptimizationConfig(
+            model=model,
+            max_tokens=max_tokens,
+            temperature=temperature,
+            language=language
+        )
+
+        
+        # Load prompt from file if specified
+        if input_file:
+            with open(input_file, 'r', encoding='utf-8') as f:
+                prompt = f.read().strip()
+        
+        # Initialize YAML service and format
+        yaml_service = YAMLService(config)
+        formatted_yaml = yaml_service.format_to_yaml(prompt)
+
+        # Handle output
+        if output_file:
+            with open(output_file, 'w', encoding='utf-8') as f:
+                f.write(formatted_yaml)
+            console.print(f"Formatted prompt saved to {output_file}")
+        else:
+            console.print(formatted_yaml)
+
     except Exception as e:
         logger.error(f"Fatal error: {str(e)}", exc_info=verbose)
         sys.exit(1)
