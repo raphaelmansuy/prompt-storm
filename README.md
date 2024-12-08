@@ -7,6 +7,7 @@
 Prompt Storm is a powerful toolkit designed for sophisticated prompt engineering and optimization. It provides a comprehensive set of tools for creating, optimizing, and managing prompts at scale, making it an essential tool for AI developers and researchers working with language models.
 
 ## Table of Contents
+
 - [Overview](#overview)
 - [Features](#features)
 - [Installation](#installation)
@@ -22,6 +23,7 @@ Prompt Storm is a powerful toolkit designed for sophisticated prompt engineering
 ## Overview
 
 Prompt Storm empowers developers to:
+
 - Optimize prompts for better performance and consistency
 - Process multiple prompts in batch mode
 - Format prompts in standardized YAML format
@@ -29,6 +31,7 @@ Prompt Storm empowers developers to:
 - Handle errors gracefully with comprehensive error reporting
 
 ### Key Features
+
 - **Intelligent Prompt Optimization**: Leverages advanced LLMs to enhance prompt effectiveness
 - **Batch Processing**: Efficiently handle multiple prompts using CSV input
 - **YAML Formatting**: Standardize prompts with structured YAML output
@@ -36,6 +39,7 @@ Prompt Storm empowers developers to:
 - **Error Handling**: Robust error management with helpful error messages
 
 ### Use Cases
+
 - Optimizing prompts for chatbots and AI assistants
 - Standardizing prompt formats across large projects
 - Processing and converting legacy prompts to YAML format
@@ -45,15 +49,18 @@ Prompt Storm empowers developers to:
 ## Installation
 
 ### Prerequisites
+
 - Python 3.8 or higher
 - pip package manager
 
 ### Basic Installation
+
 ```bash
 pip install prompt-storm
 ```
 
 ### Development Setup
+
 ```bash
 git clone https://github.com/yourusername/prompt-storm.git
 cd prompt-storm
@@ -61,6 +68,7 @@ pip install -e ".[dev]"
 ```
 
 ### Dependencies
+
 - click: Command line interface creation
 - rich: Enhanced terminal output
 - litellm: LLM interface
@@ -70,27 +78,101 @@ pip install -e ".[dev]"
 ## Quick Start
 
 ### Basic Usage
+
 Optimize a single prompt:
+
 ```bash
-prompt-storm optimize "Write a story about a magical forest"
+prompt-storm optimize "Write a story about {{subject}}"
 ```
 
+Result:
+
+```text
+Write a detailed and engaging story about {{subject_name}}. Ensure the narrative includes:
+1. A clear introduction to {{subject_name}} and their background.
+2. A central conflict or challenge that {{subject_name}} faces.
+3. The steps {{subject_name}} takes to address the conflict, using Chain of Thought (CoT) to explain their reasoning.
+4. Interactions with other characters to provide depth and context.
+5. A resolution that is satisfying and aligns with the character's journey.
+6. Consider diverse perspectives and avoid stereotypes.
+7. Maintain a balance between creative freedom and factual accuracy if {{subject_name}} is based on a real person or event.
+8. Use vivid, descriptive language to enhance the reader's experience.
+```
+
+Example with yaml output:
+
+```bash
+prompt-storm optimize "Write a story about {{subject}}" --yaml
+```
+
+Result:
+
+```yaml
+name: "Adventure Story Prompt"
+version: '1.0'
+description: >-
+  A prompt designed to generate a compelling story about a main character who embarks on an unexpected adventure. The story should include details about the conflict they face and how 
+they resolve it, reflecting diverse perspectives and addressing potential biases. The narrative style should balance human emotion with logical progression.
+author: quantalogic
+input_variables:
+  main_character:
+    type: string
+    description: >-
+      The name or description of the main character in the story.
+    examples:
+      - "Alice"
+      - "John Doe"
+  setting:
+    type: string
+    description: >-
+      The environment or location where the adventure takes place.
+    examples:
+      - "a mystical forest"
+      - "a futuristic city"
+  conflict:
+    type: string
+    description: >-
+      The main challenge or problem the character faces during their adventure.
+    examples:
+      - "a quest to find a lost artifact"
+      - "battling a powerful enemy"
+tags:
+  - "storytelling"
+  - "adventure"
+  - "character development"
+  - "conflict resolution"
+categories:
+  - "writing"
+  - "creative storytelling"
+content: >-
+  Write a compelling story about {{main_character}} who embarks on an unexpected adventure in {{setting}}. Include details about {{conflict}} they face and how they resolve it. Ensure the
+story reflects diverse perspectives and addresses potential biases. Use a narrative style that balances human emotion with logical progression. For example, start with an introduction of 
+{{main_character}} and their initial situation, followed by the emergence of {{conflict}}, their journey through challenges, and finally, the resolution. Consider edge cases such as 
+unexpected outcomes or alternative resolutions. Maintain clear, unambiguous language throughout.
+```
+
+
 Process multiple prompts from a CSV file:
+
 ```bash
 prompt-storm optimize-batch input.csv output_dir --prompt-column "prompt"
 ```
 
 Format a prompt to YAML:
+
 ```bash
 prompt-storm format-prompt "Generate a creative story" --output-file story.yaml
 ```
+
 
 ## Usage Guide
 
 ### Command Line Interface
 
 #### optimize
+
 Optimize a single prompt with customizable parameters:
+
 ```bash
 prompt-storm optimize "Your prompt" \
     --model gpt-4o-mini \
@@ -100,6 +182,7 @@ prompt-storm optimize "Your prompt" \
 ```
 
 Parameters:
+
 - `--model`: LLM model to use (default: gpt-4o-mini)
 - `--max-tokens`: Maximum tokens in response (default: 2000)
 - `--temperature`: Generation temperature (default: 0.7)
@@ -108,7 +191,9 @@ Parameters:
 - `--verbose`: Enable detailed logging
 
 #### optimize-batch
+
 Process multiple prompts from a CSV file:
+
 ```bash
 prompt-storm optimize-batch prompts.csv output/ \
     --prompt-column "prompt" \
@@ -117,6 +202,7 @@ prompt-storm optimize-batch prompts.csv output/ \
 ```
 
 Parameters:
+
 - `input-csv`: Path to input CSV file
 - `output-dir`: Directory for output files
 - `--prompt-column`: Name of CSV column containing prompts
@@ -124,7 +210,9 @@ Parameters:
 - `--language`: Target language for optimization
 
 #### format-prompt
+
 Convert a prompt to YAML format:
+
 ```bash
 prompt-storm format-prompt "Your prompt" \
     --output-file formatted.yaml \
@@ -134,6 +222,7 @@ prompt-storm format-prompt "Your prompt" \
 ### Configuration
 
 Model configuration options:
+
 ```python
 config = OptimizationConfig(
     model="gpt-4o-mini",
@@ -142,6 +231,29 @@ config = OptimizationConfig(
     language="english"
 )
 ```
+
+### Supported models
+
+We use [litellm](https://docs.litellm.ai/) to interface with various language models.
+
+Example of models:
+
+#### OpenAI models
+
+- `gpt-4o-mini`: GPT-4o Mini model
+- `gpt-4o-turbo`: GPT-4o Turbo model
+
+#### AWS Bedrock models
+
+- `bedrock/amazon.nova-pro-v1:0`
+- `bedrock/amazon.nova-lite-v1:0`
+- `bedrock/amazon.nova-micro-v1:0`
+- `bedrock/anthropic.claude-3-5-sonnet-20241022-v2:0`
+
+## Ollama models
+
+- `ollama/llama3.3:latest`
+- `ollama/qwen2.5-coder:14b`
 
 ## Architecture
 
@@ -163,21 +275,27 @@ graph TD
 ### Core Services
 
 #### OptimizerService
+
 Handles prompt optimization using LLMs:
+
 ```python
 optimizer = OptimizerService(config)
 result = optimizer.optimize("Your prompt")
 ```
 
 #### YAMLService
+
 Manages YAML formatting and validation:
+
 ```python
 yaml_service = YAMLService(config)
 yaml_output = yaml_service.format_to_yaml(prompt)
 ```
 
 #### BatchOptimizerService
+
 Processes multiple prompts efficiently:
+
 ```python
 batch_service = BatchOptimizerService(
     optimizer_service=optimizer,
@@ -189,6 +307,7 @@ batch_service = BatchOptimizerService(
 ## Development
 
 ### Project Structure
+
 ```
 prompt_storm/
 ├── __init__.py          # Package initialization
@@ -211,12 +330,15 @@ prompt_storm/
 ```
 
 ### Testing
+
 Run the test suite:
+
 ```bash
 pytest tests/
 ```
 
 Write tests following the existing pattern:
+
 ```python
 def test_optimize():
     optimizer = PromptOptimizer()
@@ -225,6 +347,7 @@ def test_optimize():
 ```
 
 ### Contributing
+
 1. Fork the repository
 2. Create a feature branch
 3. Make your changes
@@ -234,6 +357,7 @@ def test_optimize():
 ## Advanced Topics
 
 ### Custom Configurations
+
 ```python
 from prompt_storm.models.config import OptimizationConfig
 
@@ -246,6 +370,7 @@ config = OptimizationConfig(
 ```
 
 ### Integration Example
+
 ```python
 from prompt_storm import PromptOptimizer
 
@@ -261,6 +386,7 @@ with open('prompts.csv', 'r') as f:
 ```
 
 ### Best Practices
+
 1. Use appropriate temperature settings for your use case
 2. Implement proper error handling
 3. Monitor token usage
@@ -272,6 +398,7 @@ with open('prompts.csv', 'r') as f:
 ### Common Issues
 
 1. Rate Limiting
+
 ```python
 try:
     result = optimizer.optimize(prompt)
@@ -281,6 +408,7 @@ except Exception as e:
 ```
 
 2. Invalid YAML Format
+
 ```python
 try:
     yaml_output = yaml_service.format_to_yaml(prompt)
