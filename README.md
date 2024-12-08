@@ -14,6 +14,7 @@ Prompt Storm is a powerful toolkit designed for sophisticated prompt engineering
 - [Quick Start](#quick-start)
 - [Usage Guide](#usage-guide)
   - [Command Usage Examples](#command-usage-examples)
+  - [Configuration Commands](#configuration-commands)
 - [Architecture](#architecture)
 - [API Reference](#api-reference)
 - [Development](#development)
@@ -220,7 +221,31 @@ prompt-storm format-prompt "Your prompt" \
     --language english
 ```
 
-### Command Usage Examples
+#### Configuration Commands
+
+##### configure
+
+Configure the default settings for Prompt Storm:
+
+```bash
+prompt-storm configure --model gpt-4o-mini --max-tokens 2000 --temperature 0.7
+```
+
+Parameters:
+
+- `--model`: Default LLM model to use (default: gpt-4o-mini)
+- `--max-tokens`: Default maximum tokens in response (default: 2000)
+- `--temperature`: Default generation temperature (default: 0.7)
+
+##### show config
+
+Display the current configuration settings:
+
+```bash
+prompt-storm show-config
+```
+
+## Command Usage Examples
 
 #### Example 1: Optimizing a Single Prompt with Specific Parameters
 
