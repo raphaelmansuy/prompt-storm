@@ -13,6 +13,7 @@ Prompt Storm is a powerful toolkit designed for sophisticated prompt engineering
 - [Installation](#installation)
 - [Quick Start](#quick-start)
 - [Usage Guide](#usage-guide)
+  - [Command Usage Examples](#command-usage-examples)
 - [Architecture](#architecture)
 - [API Reference](#api-reference)
 - [Development](#development)
@@ -217,6 +218,53 @@ Convert a prompt to YAML format:
 prompt-storm format-prompt "Your prompt" \
     --output-file formatted.yaml \
     --language english
+```
+
+### Command Usage Examples
+
+#### Example 1: Optimizing a Single Prompt with Specific Parameters
+
+```bash
+prompt-storm optimize "Explain the concept of quantum computing" \
+    --model gpt-4o-turbo \
+    --max-tokens 1500 \
+    --temperature 0.5 \
+    --output-file quantum_computing_explanation.yaml
+```
+
+#### Example 2: Batch Processing of Prompts from a CSV File
+
+```bash
+prompt-storm optimize-batch prompts.csv output/ \
+    --prompt-column "description" \
+    --model gpt-4o-mini \
+    --language english
+```
+
+#### Example 3: Formatting a Prompt to YAML
+
+```bash
+prompt-storm format-prompt "Create a recipe for chocolate cake" \
+    --output-file chocolate_cake_recipe.yaml
+```
+
+#### Example 4: Optimizing a Prompt with Detailed Logging
+
+```bash
+prompt-storm optimize "Design a user-friendly interface for a mobile app" \
+    --model gpt-4o-mini \
+    --max-tokens 2000 \
+    --temperature 0.7 \
+    --verbose
+```
+
+#### Example 5: Batch Processing with Specific Language
+
+```bash
+prompt-storm optimize-batch prompts.csv output/ \
+    --prompt-column "description" \
+    --model gpt-4o-mini \
+    --language spanish
 ```
 
 ### Configuration
