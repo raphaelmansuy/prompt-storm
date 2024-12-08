@@ -20,6 +20,7 @@ Prompt Storm is a powerful toolkit designed for sophisticated prompt engineering
 - [Troubleshooting](#troubleshooting)
 - [License](#license)
 - [Contributing](#contributing)
+- [Publishing to PyPI](#publishing-to-pypi)
 
 ## Overview
 
@@ -432,3 +433,39 @@ We welcome contributions! Please see our [Contributing Guidelines](CONTRIBUTING.
 ### Credits
 
 Developed by the Prompt Storm team. Special thanks to all contributors.
+
+## Publishing to PyPI
+
+To publish the project to PyPI using Poetry, follow these steps:
+
+### 1. Update Version
+
+Update the version number in `pyproject.toml`.
+
+### 2. Log in to PyPI
+
+Log in to PyPI using your token:
+
+```bash
+poetry config pypi-token.pypi <your-pypi-token>
+```
+
+### 3. Build the Distribution
+
+Build the source distribution and wheel:
+
+```bash
+poetry build
+```
+
+### 4. Upload to PyPI
+
+Upload the distribution to PyPI using `twine`:
+
+```bash
+twine upload dist/*
+```
+
+### 5. Verify Upload
+
+Verify the upload by checking the project page on PyPI.
