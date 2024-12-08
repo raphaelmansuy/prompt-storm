@@ -12,9 +12,6 @@ from .services.csv_service import CSVService
 from .services.batch_optimizer_service import BatchOptimizerService
 from .utils.logger import setup_logger, console
 
-# Initialize with non-verbose logging by default
-logger = setup_logger(__name__, verbose=False)
-
 @click.group()
 def cli():
     """Prompt Storm CLI - A tool for prompt engineering and optimization."""
@@ -65,11 +62,9 @@ def optimize(prompt: str,
 
     If --yaml flag is set, the optimized prompt will be formatted as YAML.
     """
+    logger = setup_logger(__name__, verbose=verbose)
+    
     try:
-        # Set up logger with verbose setting
-        global logger
-        logger = setup_logger(__name__, verbose=verbose)
-        
         if verbose:
             logger.debug("Verbose logging enabled")
             logger.info(f"Prompt: {prompt}")
@@ -103,6 +98,12 @@ def optimize(prompt: str,
         else:
             console.print(optimized_prompt)
             
+    except FileNotFoundError as e:
+        logger.error(f"File not found: {e}")
+        sys.exit(1)
+    except ValueError as e:
+        logger.error(f"Value error: {e}")
+        sys.exit(1)
     except Exception as e:
         logger.error(f"Fatal error: {str(e)}", exc_info=verbose)
         sys.exit(1)
@@ -145,11 +146,9 @@ def optimize_batch(input_csv: str,
     The optimized prompts will be saved as YAML files in categorized subdirectories.
     Each prompt will be analyzed to determine its category and an appropriate name.
     """
+    logger = setup_logger(__name__, verbose=verbose)
+    
     try:
-        # Set up logger with verbose setting
-        global logger
-        logger = setup_logger(__name__, verbose=verbose)
-        
         if verbose:
             logger.debug("Verbose logging enabled")
             logger.info(f"Input CSV: {input_csv}")
@@ -200,6 +199,12 @@ def optimize_batch(input_csv: str,
                 if result.startswith("ERROR:"):
                     console.print(f"[red]{result}[/red]")
                     
+    except FileNotFoundError as e:
+        logger.error(f"File not found: {e}")
+        sys.exit(1)
+    except ValueError as e:
+        logger.error(f"Value error: {e}")
+        sys.exit(1)
     except Exception as e:
         logger.error(f"Fatal error: {str(e)}", exc_info=verbose)
         sys.exit(1)
@@ -215,10 +220,9 @@ def optimize_batch(input_csv: str,
 @click.option('--temperature', '-temp', help='Temperature for generation', type=click.FloatRange(min=0.0, max=1.0), default=0.7)
 def format_prompt(prompt: str, input_file: Optional[str], output_file: Optional[str], verbose: bool, language: str, model: str, max_tokens: int, temperature: float):
     """Format a provided prompt into YAML. If --input-file is specified, the content of the file is used instead."""
+    logger = setup_logger(__name__, verbose=verbose)
+    
     try:
-        # Set up logger with verbose setting
-        global logger
-        logger = setup_logger(__name__, verbose=verbose)
         if verbose:
             logger.debug("Verbose logging enabled")
             # display parameters
@@ -250,10 +254,16 @@ def format_prompt(prompt: str, input_file: Optional[str], output_file: Optional[
         if output_file:
             with open(output_file, 'w', encoding='utf-8') as f:
                 f.write(formatted_yaml)
-            console.print(f"Formatted prompt saved to {output_file}")
+            logger.info(f"Formatted prompt saved to {output_file}")
         else:
             console.print(formatted_yaml)
 
+    except FileNotFoundError as e:
+        logger.error(f"File not found: {e}")
+        sys.exit(1)
+    except ValueError as e:
+        logger.error(f"Value error: {e}")
+        sys.exit(1)
     except Exception as e:
         logger.error(f"Fatal error: {str(e)}", exc_info=verbose)
         sys.exit(1)
