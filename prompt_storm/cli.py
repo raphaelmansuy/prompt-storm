@@ -6,11 +6,16 @@ This module provides the CLI functionality for the prompt-storm package.
 import sys
 from typing import Optional
 import click
+import os
+import json
 from .optimizer import PromptOptimizer, OptimizationConfig
 from .services.yaml_service import YAMLService
 from .services.csv_service import CSVService
 from .services.batch_optimizer_service import BatchOptimizerService
 from .utils.logger import setup_logger, console
+
+CONFIG_FILE = os.path.join(os.path.expanduser('~'), '.prompt_storm.config.json')
+
 
 @click.group()
 def cli():
@@ -18,18 +23,61 @@ def cli():
     pass
 
 @cli.command()
+def configure():
+    """Configure default model settings."""
+    model_name = click.prompt('Enter model name', type=str)
+    prompt_length = click.prompt('Enter prompt length', type=int)
+    temperature = click.prompt('Enter temperature', type=float)
+    config = {
+        'model_name': model_name,
+        'prompt_length': prompt_length,
+        'temperature': temperature
+    }
+    with open(CONFIG_FILE, 'w') as config_file:
+        json.dump(config, config_file)
+    click.echo('Configuration saved.')
+
+@cli.command()
+def show_config():
+    """Display current default configuration."""
+    if os.path.exists(CONFIG_FILE):
+        with open(CONFIG_FILE, 'r') as config_file:
+            config = json.load(config_file)
+        click.echo('Current Configuration:')
+        click.echo(f"Model Name: {config['model_name']}")
+        click.echo(f"Prompt Length: {config['prompt_length']}")
+        click.echo(f"Temperature: {config['temperature']}")
+    else:
+        click.echo('No configuration found. Please run the configure command first.')
+
+def load_config():
+    if os.path.exists(CONFIG_FILE):
+        with open(CONFIG_FILE, 'r') as config_file:
+            return json.load(config_file)
+    else:
+        # Return default settings if no config file exists
+        return {
+            'model_name': 'default-model',
+            'prompt_length': 100,
+            'temperature': 0.7
+        }
+
+# Load configuration at the beginning of your application
+config = load_config()
+
+@cli.command()
 @click.argument('prompt', type=str)
 @click.option('--model', '-m', 
               help='Model to use for optimization',
-              default="gpt-4o-mini")
+              default=config['model_name'])
 @click.option('--max-tokens', '-t',
               help='Maximum tokens in response',
               type=click.IntRange(min=1),
-              default=2000)
+              default=config['prompt_length'])
 @click.option('--temperature', '-temp',
               help='Temperature for generation',
               type=click.FloatRange(min=0.0, max=1.0),
-              default=0.7)
+              default=config['temperature'])
 @click.option('--input-file', '-i',
               help='Input file containing the prompt',
               type=click.Path(exists=True, dir_okay=False),
@@ -116,15 +164,15 @@ def optimize(prompt: str,
               default='prompt')
 @click.option('--model', '-m', 
               help='Model to use for optimization',
-              default="gpt-4o-mini")
+              default=config['model_name'])
 @click.option('--max-tokens', '-t',
               help='Maximum tokens in response',
               type=click.IntRange(min=1),
-              default=2000)
+              default=config['prompt_length'])
 @click.option('--temperature', '-temp',
               help='Temperature for generation',
               type=click.FloatRange(min=0.0, max=1.0),
-              default=0.7)
+              default=config['temperature'])
 @click.option('--language', '-l',
               help='Language for optimization',
               default="english")
@@ -215,9 +263,9 @@ def optimize_batch(input_csv: str,
 @click.option('--output-file', '-o', help='Output file to save the formatted YAML', type=click.Path(dir_okay=False), default=None)
 @click.option('--verbose', '-v', help='Enable verbose logging', is_flag=True, default=False)
 @click.option('--language', '-l', help='Language for optimization', default="english")
-@click.option('--model', '-m', help='Model to use for optimization', default="gpt-4o-mini")
-@click.option('--max-tokens', '-t', help='Maximum tokens in response', type=click.IntRange(min=1), default=2000)
-@click.option('--temperature', '-temp', help='Temperature for generation', type=click.FloatRange(min=0.0, max=1.0), default=0.7)
+@click.option('--model', '-m', help='Model to use for optimization', default=config['model_name'])
+@click.option('--max-tokens', '-t', help='Maximum tokens in response', type=click.IntRange(min=1), default=config['prompt_length'])
+@click.option('--temperature', '-temp', help='Temperature for generation', type=click.FloatRange(min=0.0, max=1.0), default=config['temperature'])
 def format_prompt(prompt: str, input_file: Optional[str], output_file: Optional[str], verbose: bool, language: str, model: str, max_tokens: int, temperature: float):
     """Format a provided prompt into YAML. If --input-file is specified, the content of the file is used instead."""
     logger = setup_logger(__name__, verbose=verbose)
