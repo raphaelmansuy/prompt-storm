@@ -19,6 +19,7 @@ Prompt Storm is a powerful toolkit designed for sophisticated prompt engineering
 - [Advanced Topics](#advanced-topics)
 - [Troubleshooting](#troubleshooting)
 - [License](#license)
+- [Contributing](#contributing)
 
 ## Overview
 
@@ -151,7 +152,6 @@ story reflects diverse perspectives and addresses potential biases. Use a narrat
 unexpected outcomes or alternative resolutions. Maintain clear, unambiguous language throughout.
 ```
 
-
 Process multiple prompts from a CSV file:
 
 ```bash
@@ -163,7 +163,6 @@ Format a prompt to YAML:
 ```bash
 prompt-storm format-prompt "Generate a creative story" --output-file story.yaml
 ```
-
 
 ## Usage Guide
 
@@ -308,7 +307,7 @@ batch_service = BatchOptimizerService(
 
 ### Project Structure
 
-```
+```text
 prompt_storm/
 ├── __init__.py          # Package initialization
 ├── cli.py              # Command line interface
@@ -425,10 +424,9 @@ except YAMLValidationError as e:
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE.txt) file for details.
 
-### Contributing
-
+## Contributing
 We welcome contributions! Please see our [Contributing Guidelines](CONTRIBUTING.md) for details.
 
 ### Credits
