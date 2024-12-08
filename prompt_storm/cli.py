@@ -6,7 +6,6 @@ This module provides the CLI functionality for the prompt-storm package.
 import sys
 from typing import Optional
 import click
-from rich.console import Console
 from .optimizer import PromptOptimizer, OptimizationConfig
 from .services.yaml_service import YAMLService
 from .services.csv_service import CSVService
